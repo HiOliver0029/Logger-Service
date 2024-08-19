@@ -1,7 +1,11 @@
+// function formatDate(dateString) {
+//     const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
+//     return new Date(dateString).toLocaleDateString(undefined, options).replace(',', '');
+// }
 function formatDate(dateString) {
-    const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
-    return new Date(dateString).toLocaleDateString(undefined, options).replace(',', '');
+    return new Date(dateString).toISOString();
 }
+
 
 $(document).ready(function() {
     // Global variable to store search results

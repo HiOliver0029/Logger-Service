@@ -1,20 +1,22 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_from_directory
 import mysql.connector
+# import MySQLdb
 import configparser
 from mysql.connector import Error
 from flask_cors import CORS
 import yaml
 import os
 
-app = Flask(__name__, static_folder='public')
-CORS(app)
+app = Flask(__name__, static_folder='public', template_folder='templates')
+# CORS(app)
 
 # 支援的日誌級別
 SUPPORTED_LEVELS = ['INFO', 'WARN', 'ERRO', 'DEBUG', '']
 
+# 直接運行用
 # 讀取配置文件
-config = configparser.ConfigParser()
-config.read('db_config.txt')
+# config = configparser.ConfigParser()
+# config.read('db_config.txt')
 
 # db_config = {
 #     'user': config.get('DEFAULT', 'user'),
@@ -22,63 +24,73 @@ config.read('db_config.txt')
 #     'host': config.get('DEFAULT', 'host'),
 #     'database': config.get('DEFAULT', 'database')
 # }
+
+# container用
 db_config = {
     'user': os.environ.get('DB_USER'),
     'password': os.environ.get('DB_PASSWORD'),
     'host': os.environ.get('DB_HOST'),
-    'database': os.environ.get('DB_NAME')
+    'database': os.environ.get('DB_DATABASE')
 }
 
 
+@app.route('/', methods=['GET'])
+def serve_index():
+    return send_from_directory(app.template_folder, 'index.html')
+
 # @app.route('/', methods=['GET'])
-# def serve_index():
-#     return send_from_directory(app.static_folder, 'index.html')
+# def index():
+#     return render_template('index.html')
 
-# @app.route('/search', methods=['GET'])
-# def search_logs():
-#     host_name = request.args.get('host_name')
-#     host_ip = request.args.get('host_ip')
-#     system_type = request.args.get('system_type')
-#     # level = request.args.get('level')
-#     levels = request.args.getlist('level')  # 使用 getlist 取得多個值
-#     log_time = request.args.get('log_time')
+@app.route('/search', methods=['GET'])
+def search_logs():
+    host_name = request.args.get('host_name')
+    host_ip = request.args.get('host_ip')
+    system_type = request.args.get('system_type')
+    level = request.args.getlist('level')  # 使用 getlist 取得多個值
+    log_time_start = request.args.get('log_time_start')
+    log_time_end = request.args.get('log_time_end')
 
-#     query = 'SELECT * FROM log_data WHERE 1=1'
-#     query_params = []
+    query = 'SELECT * FROM log_data WHERE 1=1'
+    params = []
 
-#     if host_name:
-#         query += ' AND HOST_NAME = %s'
-#         query_params.append(host_name)
-#     if host_ip:
-#         query += ' AND HOST_IP = %s'
-#         query_params.append(host_ip)
-#     if system_type:
-#         query += ' AND SYSTEM_TYPE = %s'
-#         query_params.append(system_type)
-#     # if level:
-#     #     query += ' AND LEVEL = %s'
-#     #     query_params.append(level)
-#     if levels:
-#         placeholders = ','.join(['%s'] * len(levels))
-#         query += f' AND LEVEL IN ({placeholders})'
-#         query_params.extend(levels)
-#     if log_time:
-#         query += ' AND LOG_TIME = %s'
-#         query_params.append(log_time)
+    if host_name:
+        query += " AND HOST_NAME LIKE %s"
+        params.append(f"%{host_name}%")
+    if host_ip:
+        query += " AND HOST_IP LIKE %s"
+        params.append(f"%{host_ip}%")
+    if system_type:
+        query += " AND SYSTEM_TYPE LIKE %s"
+        params.append(f"%{system_type}%")
+    if level:
+        levels_placeholder = ', '.join(['%s'] * len(level))
+        query += f" AND LEVEL IN ({levels_placeholder})"
+        params.extend(level)
+    if log_time_start and log_time_end:
+        query += " AND LOG_TIME BETWEEN %s AND %s"
+        params.append(log_time_start)
+        params.append(log_time_end)
+    elif log_time_start:
+        query += " AND LOG_TIME >= %s"
+        params.append(log_time_start)
+    elif log_time_end:
+        query += " AND LOG_TIME <= %s"
+        params.append(log_time_end)
 
-#     try:
-#         connection = create_connection()
-#         if connection:
-#             cursor = connection.cursor(dictionary=True)
-#             cursor.execute(query, query_params)
-#             results = cursor.fetchall()
-#             cursor.close()
-#             connection.close()
-#             return jsonify(results), 200
-#         else:
-#             return jsonify({'status': 'error', 'message': 'Database connection failed'}), 500
-#     except Error as e:
-#         return jsonify({'status': 'error', 'message': str(e)}), 500
+    try:
+        connection = create_connection()
+        if connection:
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(query, params)
+            results = cursor.fetchall()
+            cursor.close()
+            connection.close()
+            return jsonify(results), 200
+        else:
+            return jsonify({'status': 'error', 'message': 'Database connection failed'}), 500
+    except Error as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 def check_legal_data(data):

@@ -14,8 +14,8 @@ services:
       - mysql_data:/var/lib/mysql
       - ./db_init:/docker-entrypoint-initdb.d
 
-  backend:
-    build: ./backend
+  logger:
+    build: ./logger
     command: flask run --host=0.0.0.0
     ports:
       - "5000:5000"
@@ -23,20 +23,7 @@ services:
       - DB_HOST=db
       - DB_USER=oliver
       - DB_PASSWORD=Abcd1234
-      - DB_NAME=logdb
-    depends_on:
-      - db
-
-  frontend:
-    build: ./frontend
-    command: node app.js
-    ports:
-      - "3000:3000"
-    environment:
-      - DB_HOST=db
-      - DB_USER=oliver
-      - DB_PASSWORD=Abcd1234
-      - DB_NAME=logdb
+      - DB_DATABASE=logdb
     depends_on:
       - db
 
