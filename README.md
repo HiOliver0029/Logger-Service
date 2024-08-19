@@ -5,6 +5,11 @@ podman-compose up --build
 ```
 This command will start both the logger application and MySQL database.
 
+#### For windows users
+If you're using windows system, you can turn on the podman desktop application. The above command would build 2 containers (one logger service and one database) and connect them automatically via a pod. Click the button to start pod. If it's running, it should look like the below screenshot. By entering the pod, you can see the log details to check if both the containers are running normally.   
+![Podman Desktop](/images/pod.png)  
+![Logs of pod](/images/pod_log.png)  
+
 ### Initialize the Database:
 You’ll need to create the database schema after MySQL is running. You can do this by connecting to the MySQL container and running the SQL commands:  
 (.yml file current setting: user_name: oliver, db_name: logdb; container_name depends on your folder name, should be <folder name>_db_1)
@@ -41,6 +46,6 @@ podman-compose down
 3. Push image: `podman push <遠端儲存庫名稱>/<映像名稱>:<標籤>`
 
 ### Pull image from Docker Hub
-1. `podman pull <映像名稱>:<標籤>`
+1. `podman pull docker.io/<用戶名稱>/<映像名稱>:<標籤>`
 2. Use image to start the container: `podman run -it <映像名稱>:<標籤>`
    - -it: 以互動式模式運行容器，並分配一個偽終端。
