@@ -156,7 +156,7 @@ def check_miss(data):
     
     
 #routing路徑為/log 用HTTP的post
-@app.route('/log', methods=['POST'])
+@app.route('/save-log', methods=['POST'])
 def log():
     # data為client打來的JSON格式資料(Format B)
     data = request.get_json()
@@ -201,7 +201,7 @@ def log():
         #連接失敗，告訴client
         #原因: (1)sql 帳號密碼錯誤 (2)sql service 沒開
         else:
-            return jsonify({'status': 'error', 'message': 'Database connection failed'}), 500
+            return jsonify({'status': 'error', 'message': 'Database connection failed'}), 502
    #非資料庫連接錯誤：logger 的 (1) sql 指令錯誤 (2) python code 寫錯了
     except Error as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
@@ -212,4 +212,5 @@ if __name__ == '__main__':
     
 ## data缺失400，不符規範402
 ##讀取成功200 創建成功201
-##連接失敗、非資料庫連接錯誤500
+##連接失敗502
+# 非資料庫連接錯誤500
