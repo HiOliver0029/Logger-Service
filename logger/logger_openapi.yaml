@@ -9,7 +9,7 @@ servers:
     description: Local development server
 
 paths:
-  /log:
+  /save-log:
     post:
       summary: Add a log entry
       operationId: addLog
